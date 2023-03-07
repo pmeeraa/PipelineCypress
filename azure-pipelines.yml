@@ -1,0 +1,44 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  LT_USERNAME: 'meerap'
+  LT_ACCESS_KEY: 'I9ADikrjXtd5i0yOXOtjmRQRSpcA5ng6PxIvHwEuWvNtQ8CTWd'
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.x'
+  displayName: 'Install Node.js'
+
+- task: CacheBeta@1
+  inputs:
+    key: npm | $(Agent.OS) | package-lock.json
+    path: /home/vsts/.npm
+    restoreKeys: npm | $(Agent.OS) | package-lock.json
+  displayName: Cache NPM packages
+
+- task: CacheBeta@1
+  inputs:
+    key: cypress | $(Agent.OS) | package-lock.json
+    path: /home/vsts/.cache/Cypress
+    restoreKeys: cypress | $(Agent.OS) | package-lock.json
+  displayName: Cache Cypress binary
+- script: npm ci
+  displayName: 'Install NPM dependencies'
+
+- script: npm run cy:verify
+  displayName: 'Cypress verify'
+
+- script: npm run test:ci:record:windows
+  displayName: 'Run Cypress tests'
